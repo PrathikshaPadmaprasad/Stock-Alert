@@ -1,0 +1,31 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+
+Globals:
+  Function:
+    Timeout: 10
+    Environment:
+      Variables:
+        ALPHA_VANTAGE_API_KEY: ""
+
+Resources:
+  # Lambda function to fetch stock price data
+  StockPriceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: StockPriceFunction
+      Handler: app.lambdaHandler
+      Runtime: nodejs20.x
+      CodeUri: hello-world/
+      MemorySize: 128
+      Timeout: 10
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AmazonAPIGatewayInvokeFullAccess
+      Events:
+        # API Gateway event trigger for the Lambda function
+        StockPriceApi:
+          Type: Api
+          Properties:
+            Path: /stockprice
+            Method: get
