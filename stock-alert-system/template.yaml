@@ -9,7 +9,6 @@ Globals:
         ALPHA_VANTAGE_API_KEY: ""
 
 Resources:
-  # Lambda function to fetch stock price data
   StockPriceFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -23,9 +22,27 @@ Resources:
         - AWSLambdaBasicExecutionRole
         - AmazonAPIGatewayInvokeFullAccess
       Events:
-        # API Gateway event trigger for the Lambda function
         StockPriceApi:
           Type: Api
           Properties:
             Path: /stockprice
             Method: get
+
+  # DynamoDB Table to store user stock thresholds
+  UserStockThresholdsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: UserStockThresholds
+      AttributeDefinitions:
+        - AttributeName: Username
+          AttributeType: S
+        - AttributeName: StockSymbol
+          AttributeType: S
+      KeySchema:
+        - AttributeName: Username
+          KeyType: HASH
+        - AttributeName: StockSymbol
+          KeyType: RANGE
+      ProvisionedThroughput:
+        ReadCapacityUnits: 5
+        WriteCapacityUnits: 5

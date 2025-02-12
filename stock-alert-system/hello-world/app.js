@@ -1,5 +1,5 @@
 const axios = require("axios");
-const AWS = require("aws-sdk"); // Import AWS SDK for DynamoDB
+const AWS = require("aws-sdk");
 
 exports.lambdaHandler = async (event) => {
   const stockSymbol = event.queryStringParameters.symbol; // Get stock symbol from query string
