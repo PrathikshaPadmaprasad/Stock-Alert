@@ -28,6 +28,16 @@ exports.lambdaHandler = async (event) => {
     const latestData = timeSeries[latestTimestamp];
     const stockPrice = parseFloat(latestData["4. close"]);
 
+    // Compare stock price with the threshold
+    let condition = "";
+    if (stockPrice > userThreshold) {
+      condition = "Above";
+    } else if (stockPrice < userThreshold) {
+      condition = "Below";
+    } else {
+      condition = "Equal";
+    }
+
     // Return the formatted stock data
     return {
       statusCode: 200,
