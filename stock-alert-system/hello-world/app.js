@@ -1,5 +1,5 @@
 const axios = require("axios");
-const AWS = require("aws-sdk");
+const AWS = require("aws-sdk"); // Import the AWS SDK
 
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
 const sns = new AWS.SNS(); // Initialize the SNS client
@@ -84,7 +84,7 @@ exports.lambdaHandler = async (event) => {
 
     // 6. Publish an SNS alert for this user-stock combination if condition is met
     if (condition === "Above" || condition === "Below") {
-      const message = `Hello ${username},\n\nThe stock price for ${stockSymbol} has reached your set threshold of ${userThreshold}. Current stock price: ${stockPrice}. Timestamp: ${latestTimestamp}\n\nCondition: ${condition}`;
+      const message = `Hello ${username},\n\nThe stock price for ${stockSymbol} has reached your set threshold of ${threshold}. Current stock price: ${stockPrice}. Timestamp: ${latestTimestamp}\n\nCondition: ${condition}`;
 
       const snsParams = {
         Message: message,
@@ -103,7 +103,7 @@ exports.lambdaHandler = async (event) => {
         symbol: stockSymbol,
         timestamp: latestTimestamp,
         stockPrice: stockPrice,
-        threshold: userThreshold,
+        threshold: threshold,
         condition: condition,
       }),
     };

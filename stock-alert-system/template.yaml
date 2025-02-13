@@ -21,22 +21,14 @@ Resources:
       Policies:
         - AWSLambdaBasicExecutionRole
         - AmazonAPIGatewayInvokeFullAccess
-        - PolicyName: "SNSTopicPermissions"
-          PolicyDocument:
-            Version: "2012-10-17"
-            Statement:
-              - Effect: "Allow"
-                Action:
-                  - "sns:CreateTopic"
-                  - "sns:Subscribe"
-                  - "sns:Publish"
-                Resource: "*"
+        - AmazonSNSFullAccess
+
       Events:
         StockPriceApi:
           Type: Api
           Properties:
             Path: /stockprice
-            Method: get
+            Method: Get
 
   # DynamoDB Table to store user stock thresholds
   UserStockThresholdsTable:
