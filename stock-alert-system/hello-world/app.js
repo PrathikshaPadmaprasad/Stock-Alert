@@ -9,6 +9,24 @@ exports.lambdaHandler = async (event) => {
   const threshold = parseFloat(event.queryStringParameters.threshold); // Get threshold from query string
 
   try {
+    // 1. Update or store the threshold in DynamoDB using a single update operation
+    const updateParams = {
+      TableName: "UserStockThresholds",
+      Key: {
+        Username: username,
+        StockSymbol: stockSymbol,
+      },
+      UpdateExpression: "SET Threshold = :threshold",
+      ConditionExpression:
+        "attribute_not_exists(Threshold) OR Threshold <> :threshold",
+      ExpressionAttributeValues: {
+        ":threshold": threshold,
+      },
+      ReturnValues: "ALL_NEW",
+    };
+
+    // Perform the update operation in DynamoDB
+    const result = await dynamoDB.update(updateParams).promise();
     // Fetch API key from environment variables
     const API_KEY = process.env.ALPHA_VANTAGE_API_KEY;
 
@@ -29,17 +47,6 @@ exports.lambdaHandler = async (event) => {
     const latestTimestamp = Object.keys(timeSeries)[0];
     const latestData = timeSeries[latestTimestamp];
     const stockPrice = parseFloat(latestData["4. close"]);
-
-    // Retrieve the user's threshold from DynamoDB (if it exists)
-    const thresholdData = await dynamoDB
-      .get({
-        TableName: "UserStockThresholds",
-        Key: {
-          Username: username, // User identifier (e.g., email)
-          StockSymbol: stockSymbol, // The stock symbol (e.g., TSLA)
-        },
-      })
-      .promise();
 
     // Compare stock price with the threshold
     let condition = "";
