@@ -2,11 +2,13 @@ const axios = require("axios");
 const AWS = require("aws-sdk");
 
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
+const sns = new AWS.SNS(); // Initialize the SNS client
 
 exports.lambdaHandler = async (event) => {
   const stockSymbol = event.queryStringParameters.symbol; // Get stock symbol from query string
   const username = event.queryStringParameters.username; // Get username from query string
   const threshold = parseFloat(event.queryStringParameters.threshold); // Get threshold from query string
+  const userEmail = event.queryStringParameters.email; // Get user's email from query string
 
   try {
     // 1. Update or store the threshold in DynamoDB using a single update operation
@@ -27,7 +29,29 @@ exports.lambdaHandler = async (event) => {
 
     // Perform the update operation in DynamoDB
     const result = await dynamoDB.update(updateParams).promise();
-    // Fetch API key from environment variables
+
+    // 2. Create a unique SNS Topic for the user-stock combination
+    const topicName = `StockAlert-${username}-${stockSymbol}`;
+    const createTopicParams = {
+      Name: topicName,
+    };
+
+    // Create SNS topic dynamically
+    const snsTopic = await sns.createTopic(createTopicParams).promise();
+    console.log("SNS Topic ARN:", snsTopic.TopicArn);
+
+    // 3. Subscribe the user to this SNS topic (via email)
+    const subscribeParams = {
+      Protocol: "email", // Send alert via email
+      TopicArn: snsTopic.TopicArn,
+      Endpoint: userEmail, // User's email address
+    };
+
+    // Subscribe the user to the topic
+    await sns.subscribe(subscribeParams).promise();
+    console.log(`User ${username} subscribed to ${topicName}`);
+
+    //4. Fetch API key from environment variables
     const API_KEY = process.env.ALPHA_VANTAGE_API_KEY;
 
     // Construct the Alpha Vantage API URL
@@ -48,14 +72,28 @@ exports.lambdaHandler = async (event) => {
     const latestData = timeSeries[latestTimestamp];
     const stockPrice = parseFloat(latestData["4. close"]);
 
-    // Compare stock price with the threshold
     let condition = "";
-    if (stockPrice > userThreshold) {
+    // 5.Compare stock price with the threshold
+    if (stockPrice > threshold) {
       condition = "Above";
-    } else if (stockPrice < userThreshold) {
+    } else if (stockPrice < threshold) {
       condition = "Below";
     } else {
       condition = "Equal";
+    }
+
+    // 6. Publish an SNS alert for this user-stock combination if condition is met
+    if (condition === "Above" || condition === "Below") {
+      const message = `Hello ${username},\n\nThe stock price for ${stockSymbol} has reached your set threshold of ${userThreshold}. Current stock price: ${stockPrice}. Timestamp: ${latestTimestamp}\n\nCondition: ${condition}`;
+
+      const snsParams = {
+        Message: message,
+        TopicArn: snsTopic.TopicArn, // The unique SNS topic ARN for the user-stock combination
+      };
+
+      // Publish message to SNS
+      await sns.publish(snsParams).promise();
+      console.log("Alert sent to SNS:", message);
     }
 
     // Return the formatted stock data

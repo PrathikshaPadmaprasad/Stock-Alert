@@ -21,6 +21,16 @@ Resources:
       Policies:
         - AWSLambdaBasicExecutionRole
         - AmazonAPIGatewayInvokeFullAccess
+        - PolicyName: "SNSTopicPermissions"
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: "Allow"
+                Action:
+                  - "sns:CreateTopic"
+                  - "sns:Subscribe"
+                  - "sns:Publish"
+                Resource: "*"
       Events:
         StockPriceApi:
           Type: Api
