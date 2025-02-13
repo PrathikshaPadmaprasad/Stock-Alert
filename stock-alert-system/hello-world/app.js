@@ -1,6 +1,8 @@
 const axios = require("axios");
 const AWS = require("aws-sdk");
 
+const dynamoDB = new AWS.DynamoDB.DocumentClient();
+
 exports.lambdaHandler = async (event) => {
   const stockSymbol = event.queryStringParameters.symbol; // Get stock symbol from query string
   const username = event.queryStringParameters.username; // Get username from query string
@@ -27,6 +29,17 @@ exports.lambdaHandler = async (event) => {
     const latestTimestamp = Object.keys(timeSeries)[0];
     const latestData = timeSeries[latestTimestamp];
     const stockPrice = parseFloat(latestData["4. close"]);
+
+    // Retrieve the user's threshold from DynamoDB (if it exists)
+    const thresholdData = await dynamoDB
+      .get({
+        TableName: "UserStockThresholds",
+        Key: {
+          Username: username, // User identifier (e.g., email)
+          StockSymbol: stockSymbol, // The stock symbol (e.g., TSLA)
+        },
+      })
+      .promise();
 
     // Compare stock price with the threshold
     let condition = "";
