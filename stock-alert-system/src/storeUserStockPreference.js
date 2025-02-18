@@ -2,6 +2,8 @@ const AWS = require("aws-sdk");
 
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
 
+const SNS_TOPIC_ARN = process.env.SNS_TOPIC_ARN;
+
 exports.lambdaHandler = async (event) => {
   try {
     const requestBody = JSON.parse(event.body);
@@ -27,9 +29,19 @@ exports.lambdaHandler = async (event) => {
 
     await dynamoDB.put(putParams).promise();
 
+    const subscribeParams = {
+      Protocol: "email", // User receives notifications via email
+      TopicArn: SNS_TOPIC_ARN,
+      Endpoint: email, // User's email address
+    };
+
+    await sns.subscribe(subscribeParams).promise();
+
     return {
       statusCode: 200,
-      body: JSON.stringify({ message: "Stock alert set successfully!" }),
+      body: JSON.stringify({
+        message: "Stock alert set successfully & user subscribed to SNS!!",
+      }),
     };
   } catch (error) {
     console.error("Error storing user preferences:", error);

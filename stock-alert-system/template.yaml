@@ -9,13 +9,11 @@ Globals:
         ALPHA_VANTAGE_API_KEY: ""
 
 Resources:
-
   # SNS Topic to send stock alerts
-   StockAlertsTopic:
+  StockAlertsTopic:
     Type: AWS::SNS::Topic
     Properties:
-      TopicName: StockAlerts
-
+      DisplayName: StockAlerts
 
   # Lambda Function to store User Prefernce ,threshold and stock symbol
   UserStockThresholdFunction:
