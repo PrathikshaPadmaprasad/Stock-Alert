@@ -34,7 +34,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: StockPriceFunction
-      Handler: app.lambdaHandler
+      Handler: StockPriceFunction.lambdaHandler
       Runtime: nodejs20.x
       CodeUri: src/
       MemorySize: 128

@@ -2,7 +2,7 @@ const AWS = require("aws-sdk");
 
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
 
-exports.lambdahandler = async (event) => {
+exports.lambdaHandler = async (event) => {
   try {
     const requestBody = JSON.parse(event.body);
     const { username, stockSymbol, threshold, email } = requestBody;
