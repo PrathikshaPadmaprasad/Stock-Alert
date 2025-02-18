@@ -1,4 +1,5 @@
 const AWS = require("aws-sdk");
+const sns = new AWS.SNS();
 
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
 
