@@ -9,6 +9,14 @@ Globals:
         ALPHA_VANTAGE_API_KEY: ""
 
 Resources:
+
+  # SNS Topic to send stock alerts
+   StockAlertsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: StockAlerts
+
+
   # Lambda Function to store User Prefernce ,threshold and stock symbol
   UserStockThresholdFunction:
     Type: AWS::Serverless::Function
@@ -22,6 +30,9 @@ Resources:
         - AWSLambdaBasicExecutionRole
         - AmazonDynamoDBFullAccess
         - AmazonAPIGatewayInvokeFullAccess
+      Environment:
+        Variables:
+          SNS_TOPIC_ARN: !Ref StockAlertsTopic
       Events:
         StoreStockApi:
           Type: Api
@@ -44,6 +55,9 @@ Resources:
         - AmazonAPIGatewayInvokeFullAccess
         - AmazonSNSFullAccess
         - AmazonDynamoDBFullAccess
+      Environment:
+        Variables:
+          SNS_TOPIC_ARN: !Ref StockAlertsTopic
       Events:
         ScheduledTrigger:
           Type: Schedule
