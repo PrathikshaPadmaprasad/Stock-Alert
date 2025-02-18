@@ -1,50 +1,60 @@
 const axios = require("axios");
-const AWS = require("aws-sdk"); // Import the AWS SDK
+const AWS = require("aws-sdk");
 
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
-const sns = new AWS.SNS(); // Initialize the SNS client
+const sns = new AWS.SNS();
 
 exports.lambdaHandler = async (event) => {
-  const stockSymbol = event.queryStringParameters.symbol; // Get stock symbol from query string
-  const username = event.queryStringParameters.username; // Get username from query string
-  const threshold = parseFloat(event.queryStringParameters.threshold); // Get threshold from query string
-  const userEmail = event.queryStringParameters.email; // Get user's email from query string
+  const stockSymbol = event.queryStringParameters.symbol;
+  const username = event.queryStringParameters.username;
+  const threshold = parseFloat(event.queryStringParameters.threshold);
+  const userEmail = event.queryStringParameters.email;
 
   try {
     // 1. Update or store the threshold in DynamoDB using a single update operation
-    const updateParams = {
+    const putParams = {
       TableName: "UserStockThresholds",
-      Key: {
+      Item: {
         Username: username,
         StockSymbol: stockSymbol,
+        Threshold: threshold,
       },
-      UpdateExpression: "SET Threshold = :threshold",
-      ConditionExpression:
-        "attribute_not_exists(Threshold) OR Threshold <> :threshold",
-      ExpressionAttributeValues: {
-        ":threshold": threshold,
-      },
-      ReturnValues: "ALL_NEW",
     };
 
     // Perform the update operation in DynamoDB
-    const result = await dynamoDB.update(updateParams).promise();
+    const result = await dynamoDB.put(putParams).promise();
+    console.log("✅ DynamoDB update result:", result);
 
-    // 2. Create a unique SNS Topic for the user-stock combination
     const topicName = `StockAlert-${username}-${stockSymbol}`;
-    const createTopicParams = {
-      Name: topicName,
-    };
+    const listTopicsParams = {};
 
-    // Create SNS topic dynamically
-    const snsTopic = await sns.createTopic(createTopicParams).promise();
-    console.log("SNS Topic ARN:", snsTopic.TopicArn);
+    // List all topics in SNS
+    const topicsResponse = await sns.listTopics(listTopicsParams).promise();
+
+    // Check if the topic exists by comparing the topic ARN
+    let snsTopic;
+    const existingTopic = topicsResponse.Topics.find((topic) =>
+      topic.TopicArn.includes(topicName)
+    );
+
+    if (existingTopic) {
+      snsTopic = existingTopic; // Use the existing topic
+      console.log("Topic already exists:", snsTopic.TopicArn);
+    } else {
+      // Create SNS topic dynamically if it doesn't exist
+      const createTopicParams = {
+        Name: topicName,
+      };
+
+      snsTopic = await sns.createTopic(createTopicParams).promise();
+      console.log("SNS Topic ARN:", snsTopic.TopicArn);
+    }
 
     // 3. Subscribe the user to this SNS topic (via email)
     const subscribeParams = {
-      Protocol: "email", // Send alert via email
+      Protocol: "email",
       TopicArn: snsTopic.TopicArn,
-      Endpoint: userEmail, // User's email address
+      Endpoint: userEmail,
     };
 
     // Subscribe the user to the topic
@@ -88,7 +98,7 @@ exports.lambdaHandler = async (event) => {
 
       const snsParams = {
         Message: message,
-        TopicArn: snsTopic.TopicArn, // The unique SNS topic ARN for the user-stock combination
+        TopicArn: snsTopic.TopicArn,
       };
 
       // Publish message to SNS

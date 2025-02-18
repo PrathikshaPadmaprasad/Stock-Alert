@@ -9,26 +9,46 @@ Globals:
         ALPHA_VANTAGE_API_KEY: ""
 
 Resources:
+  # Lambda Function to store User Prefernce ,threshold and stock symbol
+  UserStockThresholdFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: UserStockThresholdFunction
+      Handler: storeUserStockPreference.lambdaHandler
+      Runtime: nodejs20.x
+      CodeUri: src/
+      MemorySize: 128
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - AmazonDynamoDBFullAccess
+        - AmazonAPIGatewayInvokeFullAccess
+      Events:
+        StoreStockApi:
+          Type: Api
+          Properties:
+            Path: /set-stock-threshold
+            Method: Post
+
+  # Lambda function to get stock price
   StockPriceFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: StockPriceFunction
       Handler: app.lambdaHandler
       Runtime: nodejs20.x
-      CodeUri: hello-world/
+      CodeUri: src/
       MemorySize: 128
       Timeout: 10
       Policies:
         - AWSLambdaBasicExecutionRole
         - AmazonAPIGatewayInvokeFullAccess
         - AmazonSNSFullAccess
-
+        - AmazonDynamoDBFullAccess
       Events:
-        StockPriceApi:
-          Type: Api
+        ScheduledTrigger:
+          Type: Schedule
           Properties:
-            Path: /stockprice
-            Method: Get
+            Schedule: rate(10 minutes)
 
   # DynamoDB Table to store user stock thresholds
   UserStockThresholdsTable:
