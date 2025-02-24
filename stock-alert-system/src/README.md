@@ -101,3 +101,7 @@ The email must be valid, or AWS SNS won’t send the alert.
 ✅ Add SMS alerts using AWS SNS.
 
 ✅ Build a frontend dashboard for managing alerts
+
+✅ Instead of checking stock prices every 10 minutes, use WebSockets to receive real-time updates only when prices change. This reduces unnecessary API calls.
+
+✅ Use Webhooks (If API Supports It) – Some stock APIs provide webhooks that send data only when stock prices change. This avoids polling and saves costs.
