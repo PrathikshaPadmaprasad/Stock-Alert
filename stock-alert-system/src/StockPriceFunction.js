@@ -4,7 +4,6 @@ const axios = require("axios");
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
 const sns = new AWS.SNS();
 
-const SNS_TOPIC_ARN = process.env.SNS_TOPIC_ARN; // Get SNS topic ARN from environment variables
 const ALPHA_VANTAGE_API_KEY = process.env.ALPHA_VANTAGE_API_KEY; // Get Alpha Vantage API Key
 
 exports.lambdaHandler = async () => {
@@ -52,31 +51,45 @@ exports.lambdaHandler = async () => {
         const latestTimestamp = Object.keys(timeSeries)[0];
         const stockPrice = parseFloat(timeSeries[latestTimestamp]["4. close"]);
 
-        // Compare stock price with thresholds
+        // Compare stock price with thresholds for each user
         for (const user of stockWatchlist[stockSymbol]) {
-          // Check if user wants an alert "above" or "below" their threshold and if the price is crossed
+          const { Username, Threshold, Email, AlertCondition } = user;
+
+          // Fetch the SNS_TOPIC_ARN from DynamoDB for each user
+          const getTopicArnParams = {
+            TableName: "UserStockThresholds",
+            Key: {
+              Username: Username,
+              StockSymbol: stockSymbol,
+            },
+          };
+
+          // Retrieve the stored SNS_TOPIC_ARN
+          const topicArnData = await dynamoDB.get(getTopicArnParams).promise();
+          const snsTopicArn = topicArnData.Item.SNS_TOPIC_ARN;
+
+          // Check if the alert condition is met and send the alert
           if (
-            (user.AlertCondition === "above" && stockPrice > user.Threshold) ||
-            (user.AlertCondition === "below" && stockPrice < user.Threshold)
+            (AlertCondition === "above" && stockPrice > Threshold) ||
+            (AlertCondition === "below" && stockPrice < Threshold)
           ) {
-            const condition = stockPrice > user.Threshold ? "Above" : "Below";
+            const condition = stockPrice > Threshold ? "Above" : "Below";
+            const message = `Stock Alert for ${Username}!\n\nStock: ${stockSymbol}\nThreshold: ${Threshold}\nCurrent Price: ${stockPrice}\nTimestamp: ${latestTimestamp}\nCondition: ${condition}`;
 
-            const message = `Stock Alert for ${user.Username}!\n\nStock: ${stockSymbol}\nThreshold: ${user.Threshold}\nCurrent Price: ${stockPrice}\nTimestamp: ${latestTimestamp}\nCondition: ${condition}`;
-
-            // Publish alert to SNS topic
+            // Publish alert to the user's SNS topic
             await sns
               .publish({
                 Message: message,
                 Subject: `Stock Alert: ${stockSymbol} (${condition})`,
-                TopicArn: SNS_TOPIC_ARN,
+                TopicArn: snsTopicArn, // Use the ARN fetched from DynamoDB
               })
               .promise();
 
-            console.log(` Sent alert for ${stockSymbol} - ${condition}`);
+            console.log(`Sent alert for ${stockSymbol} - ${condition}`);
           }
         }
       } catch (error) {
-        console.error(` Error fetching stock price for ${stockSymbol}:`, error);
+        console.error(`Error fetching stock price for ${stockSymbol}:`, error);
       }
     }
 

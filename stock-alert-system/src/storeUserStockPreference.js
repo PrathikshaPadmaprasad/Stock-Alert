@@ -32,35 +32,40 @@ exports.lambdaHandler = async (event) => {
 
     await dynamoDB.put(putParams).promise();
 
-    const listSubscriptionsParams = {
-      TopicArn: SNS_TOPIC_ARN,
+    // Generate a unique SNS topic ARN for the user
+    const userTopicName = `StockAlert-${username}`;
+    const createTopicParams = { Name: userTopicName };
+    const snsTopic = await sns.createTopic(createTopicParams).promise();
+    const snsTopicArn = snsTopic.TopicArn;
+
+    // Store the SNS topic ARN in DynamoDB as well
+    const updateParams = {
+      TableName: "UserStockThresholds",
+      Key: {
+        Username: username,
+        StockSymbol: stockSymbol.toUpperCase(),
+      },
+      UpdateExpression: "SET SNS_TOPIC_ARN = :snsTopicArn",
+      ExpressionAttributeValues: {
+        ":snsTopicArn": snsTopicArn,
+      },
     };
-    const subscriptionsResponse = await sns
-      .listSubscriptionsByTopic(listSubscriptionsParams)
-      .promise();
+    await dynamoDB.update(updateParams).promise();
 
-    const existingSubscription = subscriptionsResponse.Subscriptions.find(
-      (subscription) => subscription.Endpoint === email
-    );
+    // Subscribe the user to their SNS topic
+    const subscribeParams = {
+      Protocol: "email",
+      TopicArn: snsTopicArn,
+      Endpoint: email,
+    };
 
-    if (existingSubscription) {
-      console.log("User is already subscribed.");
-    } else {
-      const subscribeParams = {
-        Protocol: "email",
-        TopicArn: SNS_TOPIC_ARN,
-        Endpoint: email,
-      };
-
-      await sns.subscribe(subscribeParams).promise();
-
-      console.log(`User ${email} subscribed to ${SNS_TOPIC_ARN}`);
-    }
+    await sns.subscribe(subscribeParams).promise();
 
     return {
       statusCode: 200,
       body: JSON.stringify({
         message: "Stock alert set successfully & user subscribed to SNS!!",
+        snsTopicArn: snsTopicArn,
       }),
     };
   } catch (error) {
