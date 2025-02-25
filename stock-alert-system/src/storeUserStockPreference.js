@@ -32,13 +32,30 @@ exports.lambdaHandler = async (event) => {
 
     await dynamoDB.put(putParams).promise();
 
-    const subscribeParams = {
-      Protocol: "email", // User receives notifications via email
+    const listSubscriptionsParams = {
       TopicArn: SNS_TOPIC_ARN,
-      Endpoint: email, // User's email address
     };
+    const subscriptionsResponse = await sns
+      .listSubscriptionsByTopic(listSubscriptionsParams)
+      .promise();
 
-    await sns.subscribe(subscribeParams).promise();
+    const existingSubscription = subscriptionsResponse.Subscriptions.find(
+      (subscription) => subscription.Endpoint === email
+    );
+
+    if (existingSubscription) {
+      console.log("User is already subscribed.");
+    } else {
+      const subscribeParams = {
+        Protocol: "email",
+        TopicArn: SNS_TOPIC_ARN,
+        Endpoint: email,
+      };
+
+      await sns.subscribe(subscribeParams).promise();
+
+      console.log(`User ${email} subscribed to ${SNS_TOPIC_ARN}`);
+    }
 
     return {
       statusCode: 200,
