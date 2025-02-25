@@ -25,9 +25,14 @@ exports.lambdaHandler = async () => {
     // organize stock symbols and user alerts
     const stockWatchlist = {};
     data.Items.forEach((item) => {
-      const { Username, StockSymbol, Threshold, Email } = item;
+      const { Username, StockSymbol, Threshold, Email, AlertCondition } = item;
       if (!stockWatchlist[StockSymbol]) stockWatchlist[StockSymbol] = [];
-      stockWatchlist[StockSymbol].push({ Username, Threshold, Email });
+      stockWatchlist[StockSymbol].push({
+        Username,
+        Threshold,
+        Email,
+        AlertCondition,
+      });
     });
 
     // 3️⃣ Fetch stock prices and compare with thresholds
@@ -49,7 +54,11 @@ exports.lambdaHandler = async () => {
 
         // Compare stock price with thresholds
         for (const user of stockWatchlist[stockSymbol]) {
-          if (stockPrice > user.Threshold || stockPrice < user.Threshold) {
+          // Check if user wants an alert "above" or "below" their threshold and if the price is crossed
+          if (
+            (user.AlertCondition === "above" && stockPrice > user.Threshold) ||
+            (user.AlertCondition === "below" && stockPrice < user.Threshold)
+          ) {
             const condition = stockPrice > user.Threshold ? "Above" : "Below";
 
             const message = `Stock Alert for ${user.Username}!\n\nStock: ${stockSymbol}\nThreshold: ${user.Threshold}\nCurrent Price: ${stockPrice}\nTimestamp: ${latestTimestamp}\nCondition: ${condition}`;

@@ -8,9 +8,10 @@ const SNS_TOPIC_ARN = process.env.SNS_TOPIC_ARN;
 exports.lambdaHandler = async (event) => {
   try {
     const requestBody = JSON.parse(event.body);
-    const { username, stockSymbol, threshold, email } = requestBody;
+    const { username, stockSymbol, threshold, email, alertCondition } =
+      requestBody;
 
-    if (!username || !stockSymbol || !threshold || !email) {
+    if (!username || !stockSymbol || !threshold || !email || !alertCondition) {
       return {
         statusCode: 400,
         body: JSON.stringify({ error: "Missing required fields" }),
@@ -25,6 +26,7 @@ exports.lambdaHandler = async (event) => {
         StockSymbol: stockSymbol.toUpperCase(),
         Threshold: parseFloat(threshold),
         Email: email,
+        AlertCondition: alertCondition,
       },
     };
 
