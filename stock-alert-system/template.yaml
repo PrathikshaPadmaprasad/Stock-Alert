@@ -9,11 +9,16 @@ Globals:
         ALPHA_VANTAGE_API_KEY: ""
 
 Resources:
-  # # SNS Topic to send stock alerts
-  # StockAlertsTopic:
-  #   Type: AWS::SNS::Topic
-  #   Properties:
-  #     DisplayName: StockAlerts
+  # S3 Bucket to store deployment artifactS
+  BucketForDeployment:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: stock-alert-system-deployment-bucket
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        IgnorePublicAcls: true
+        BlockPublicPolicy: true
+        RestrictPublicBuckets: true
 
   # Lambda Function to store User Prefernce ,threshold and stock symbol
   UserStockThresholdFunction:
@@ -28,9 +33,7 @@ Resources:
         - AWSLambdaBasicExecutionRole
         - AmazonDynamoDBFullAccess
         - AmazonAPIGatewayInvokeFullAccess
-      # Environment:
-      #   Variables:
-      #     SNS_TOPIC_ARN: !Ref StockAlertsTopic
+
       Events:
         StoreStockApi:
           Type: Api
@@ -53,9 +56,7 @@ Resources:
         - AmazonAPIGatewayInvokeFullAccess
         - AmazonSNSFullAccess
         - AmazonDynamoDBFullAccess
-      # Environment:
-      #   Variables:
-      #     SNS_TOPIC_ARN: !Ref StockAlertsTopic
+
       Events:
         ScheduledTrigger:
           Type: Schedule

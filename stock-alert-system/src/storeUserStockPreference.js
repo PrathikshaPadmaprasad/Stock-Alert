@@ -51,15 +51,33 @@ exports.lambdaHandler = async (event) => {
       },
     };
     await dynamoDB.update(updateParams).promise();
-
-    // Subscribe the user to their SNS topic
-    const subscribeParams = {
-      Protocol: "email",
+    // Check if the user is already subscribed to the SNS topic
+    const listSubscriptionsParams = {
       TopicArn: snsTopicArn,
-      Endpoint: email,
     };
 
-    await sns.subscribe(subscribeParams).promise();
+    const subscriptionsResponse = await sns
+      .listSubscriptionsByTopic(listSubscriptionsParams)
+      .promise();
+
+    // Check if the email is already subscribed
+    const existingSubscription = subscriptionsResponse.Subscriptions.find(
+      (subscription) => subscription.Endpoint === email
+    );
+
+    if (!existingSubscription) {
+      // Subscribe the user to their SNS topic
+      const subscribeParams = {
+        Protocol: "email",
+        TopicArn: snsTopicArn,
+        Endpoint: email,
+      };
+
+      await sns.subscribe(subscribeParams).promise();
+      console.log(`User ${email} subscribed to ${snsTopicArn}`);
+    } else {
+      console.log(`User ${email} is already subscribed.`);
+    }
 
     return {
       statusCode: 200,

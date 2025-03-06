@@ -1,6 +1,6 @@
 📈 **Stock Price Alert System**
 
-🌟 **About This Project** 🌟
+🌟 **Overview** 🌟
 
 The Stock Price Alert System is a serverless application that tracks stock prices in real-time and sends email alerts when a stock price crosses a user-defined threshold.
 
@@ -15,7 +15,7 @@ Architecture
 🛠 **Technologies Used**
 
 - **AWS Lambda** – Runs backend logic to fetch stock prices and compare them with user thresholds.
-- **DynamoDB** – Stores user stock preferences and alert thresholds.
+- **DynamoDB** – Stores user stock preferences, Topic ARN and alert thresholds.
 - **API Gateway** – Handles HTTP requests for managing stock alerts.
 - **AWS SNS (Simple Notification Service)** – Sends email alerts to users.
 - **Alpha Vantage API** – Retrieves real-time stock prices.
@@ -97,6 +97,8 @@ Use a valid stock symbol (e.g., AAPL for Apple, TSLA for Tesla).
 The threshold should be a number (e.g., 150 for $150).
 
 The email must be valid, or AWS SNS won’t send the alert.
+
+The alert condition specifies whether you want to receive an alert when the stock price goes above or below your threshold("above","below")
 
 ---
 
