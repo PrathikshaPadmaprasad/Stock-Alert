@@ -3,23 +3,29 @@ name: Build-Test-Deploy
 on:
   push:
     branches:
-      - main # Trigger on push to main branch
+      - main
 jobs:
   build:
-    name: Build Application
-    runs-on: ubuntu-latest # Use latest Ubuntu runner
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v2
         with:
-          node-version: 22
+          node-version: "22"
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: npm install
 
-      - name: Build Project
-        run: npm run build
+      - name: Install AWS SAM CLI
+        run: |
+          curl -sSL https://github.com/aws/aws-sam-cli/releases/download/v1.70.0/aws-sam-cli-linux-x86_64.zip -o sam-cli.zip
+          unzip sam-cli.zip -d sam-installation
+          sudo ./sam-installation/install
+          rm -rf sam-cli.zip sam-installation
+
+      - name: Build application with SAM
+        run: sam build
