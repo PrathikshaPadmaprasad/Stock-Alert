@@ -9,17 +9,6 @@ Globals:
         ALPHA_VANTAGE_API_KEY: ""
 
 Resources:
-  # S3 Bucket to store deployment artifactS
-  BucketForDeployment:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketName: stock-alert-system-deployment-bucket
-      PublicAccessBlockConfiguration:
-        BlockPublicAcls: true
-        IgnorePublicAcls: true
-        BlockPublicPolicy: true
-        RestrictPublicBuckets: true
-
   # Lambda Function to store User Prefernce ,threshold and stock symbol
   UserStockThresholdFunction:
     Type: AWS::Serverless::Function
