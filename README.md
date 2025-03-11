@@ -1,5 +1,7 @@
 📈 **Stock Price Alert System**
 
+[![Build-Test-Deploy](https://github.com/PrathikshaPadmaprasad/Stock-Alert/actions/workflows/test-build-deploy.yml/badge.svg)](https://github.com/PrathikshaPadmaprasad/Stock-Alert/actions/workflows/test-build-deploy.yml)
+
 🌟 **Overview** 🌟
 
 The Stock Price Alert System is a serverless application that tracks stock prices in real-time and sends email alerts when a stock price crosses a user-defined threshold.
