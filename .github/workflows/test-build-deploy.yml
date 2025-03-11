@@ -20,12 +20,5 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Install AWS SAM CLI
-        run: |
-          curl -sSL https://github.com/aws/aws-sam-cli/releases/download/v1.70.0/aws-sam-cli-linux-x86_64.zip -o sam-cli.zip
-          unzip sam-cli.zip -d sam-installation
-          sudo ./sam-installation/install
-          rm -rf sam-cli.zip sam-installation
-
       - name: Build application with SAM
         run: sam build
