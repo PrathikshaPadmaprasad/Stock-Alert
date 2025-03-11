@@ -1,8 +1,16 @@
-const AWS = require("aws-sdk");
-const sns = new AWS.SNS();
-
-const dynamoDB = new AWS.DynamoDB.DocumentClient();
-
+import {
+  SNSClient,
+  CreateTopicCommand,
+  SubscribeCommand,
+  ListSubscriptionsByTopicCommand,
+} from "@aws-sdk/client-sns";
+import {
+  DynamoDBClient,
+  PutCommand,
+  UpdateCommand,
+} from "@aws-sdk/lib-dynamodb";
+const sns = new SNSClient({});
+const dynamoDB = new DynamoDBClient({});
 const SNS_TOPIC_ARN = process.env.SNS_TOPIC_ARN;
 
 exports.lambdaHandler = async (event) => {
@@ -30,12 +38,14 @@ exports.lambdaHandler = async (event) => {
       },
     };
 
-    await dynamoDB.put(putParams).promise();
+    // await dynamoDB.put(putParams).promise();
+    await dynamoDB.send(new PutCommand(putParams));
 
     // Generate a unique SNS topic ARN for the user
     const userTopicName = `StockAlert-${username}`;
     const createTopicParams = { Name: userTopicName };
-    const snsTopic = await sns.createTopic(createTopicParams).promise();
+    // const snsTopic = await sns.createTopic(createTopicParams).promise();
+    const snsTopic = await sns.send(new CreateTopicCommand(createTopicParams));
     const snsTopicArn = snsTopic.TopicArn;
 
     // Store the SNS topic ARN in DynamoDB as well
@@ -50,15 +60,20 @@ exports.lambdaHandler = async (event) => {
         ":snsTopicArn": snsTopicArn,
       },
     };
-    await dynamoDB.update(updateParams).promise();
+    // await dynamoDB.update(updateParams).promise();
+    await dynamoDB.send(new UpdateCommand(updateParams));
     // Check if the user is already subscribed to the SNS topic
     const listSubscriptionsParams = {
       TopicArn: snsTopicArn,
     };
 
-    const subscriptionsResponse = await sns
-      .listSubscriptionsByTopic(listSubscriptionsParams)
-      .promise();
+    // const subscriptionsResponse = await sns
+    //   .listSubscriptionsByTopic(listSubscriptionsParams)
+    //   .promise();
+
+    const subscriptionsResponse = await sns.send(
+      new ListSubscriptionsByTopicCommand(listSubscriptionsParams)
+    );
 
     // Check if the email is already subscribed
     const existingSubscription = subscriptionsResponse.Subscriptions.find(
@@ -73,7 +88,8 @@ exports.lambdaHandler = async (event) => {
         Endpoint: email,
       };
 
-      await sns.subscribe(subscribeParams).promise();
+      // await sns.subscribe(subscribeParams).promise();
+      await sns.send(new SubscribeCommand(subscribeParams));
       console.log(`User ${email} subscribed to ${snsTopicArn}`);
     } else {
       console.log(`User ${email} is already subscribed.`);
