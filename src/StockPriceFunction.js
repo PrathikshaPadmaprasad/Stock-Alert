@@ -1,10 +1,15 @@
-const AWS = require("aws-sdk");
+const { SNSClient, PublishCommand } = require("@aws-sdk/client-sns");
+const {
+  DynamoDBClient,
+  ScanCommand,
+  GetCommand,
+} = require("@aws-sdk/lib-dynamodb");
 const axios = require("axios");
 
-const dynamoDB = new AWS.DynamoDB.DocumentClient();
-const sns = new AWS.SNS();
+const dynamoDB = new DynamoDBClient({});
+const sns = new SNSClient({});
 
-const ALPHA_VANTAGE_API_KEY = process.env.ALPHA_VANTAGE_API_KEY; // Get Alpha Vantage API Key
+const ALPHA_VANTAGE_API_KEY = process.env.ALPHA_VANTAGE_API_KEY;
 
 exports.lambdaHandler = async () => {
   try {
@@ -14,7 +19,8 @@ exports.lambdaHandler = async () => {
 
     // 1️⃣ Fetch all stock thresholds from DynamoDB
     const scanParams = { TableName: "UserStockThresholds" };
-    const data = await dynamoDB.scan(scanParams).promise();
+    // const data = await dynamoDB.scan(scanParams).promise();
+    const data = await dynamoDB.send(new ScanCommand(scanParams));
 
     if (!data.Items || data.Items.length === 0) {
       console.log("No stock thresholds found in DynamoDB.");
@@ -65,7 +71,10 @@ exports.lambdaHandler = async () => {
           };
 
           // Retrieve the stored SNS_TOPIC_ARN
-          const topicArnData = await dynamoDB.get(getTopicArnParams).promise();
+          // const topicArnData = await dynamoDB.get(getTopicArnParams).promise();
+          const topicArnData = await dynamoDB.send(
+            new GetCommand(getTopicArnParams)
+          );
           const snsTopicArn = topicArnData.Item.SNS_TOPIC_ARN;
 
           // Check if the alert condition is met and send the alert
