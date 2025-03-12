@@ -4,11 +4,9 @@ const {
   SubscribeCommand,
   ListSubscriptionsByTopicCommand,
 } = require("@aws-sdk/client-sns");
-const {
-  DynamoDBClient,
-  PutCommand,
-  UpdateCommand,
-} = require("@aws-sdk/lib-dynamodb");
+
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+const { PutCommand, UpdateCommand } = require("@aws-sdk/lib-dynamodb");
 const sns = new SNSClient({});
 const dynamoDB = new DynamoDBClient({});
 const SNS_TOPIC_ARN = process.env.SNS_TOPIC_ARN;
