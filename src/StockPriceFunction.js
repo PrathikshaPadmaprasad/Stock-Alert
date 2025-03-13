@@ -5,6 +5,7 @@ const {
   GetCommand,
 } = require("@aws-sdk/lib-dynamodb");
 const axios = require("axios");
+console.log("Axios function");
 
 const dynamoDB = new DynamoDBClient({});
 const sns = new SNSClient({});
