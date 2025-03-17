@@ -7,7 +7,7 @@
   "dependencies": {
     "@aws-sdk/client-sns": "^3.744.0",
     "aws-sdk": "^2.1692.0",
-    "axios": ">=1.6.0"
+    "axios": "^1.8.3"
   },
   "scripts": {
     "test": "mocha tests/unit/"
