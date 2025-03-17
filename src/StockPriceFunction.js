@@ -1,10 +1,8 @@
 const { SNSClient, PublishCommand } = require("@aws-sdk/client-sns");
-const {
-  DynamoDBClient,
-  ScanCommand,
-  GetCommand,
-} = require("@aws-sdk/lib-dynamodb");
+const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
+const { ScanCommand, GetCommand } = require("@aws-sdk/lib-dynamodb");
 const axios = require("axios");
+
 console.log("Axios function");
 
 const dynamoDB = new DynamoDBClient({});
@@ -18,7 +16,7 @@ exports.lambdaHandler = async () => {
       "🔹 Lambda triggered by EventBridge (CloudWatch Scheduled Event)"
     );
 
-    // 1️⃣ Fetch all stock thresholds from DynamoDB
+    //  Fetch all stock thresholds from DynamoDB
     const scanParams = { TableName: "UserStockThresholds" };
     // const data = await dynamoDB.scan(scanParams).promise();
     const data = await dynamoDB.send(new ScanCommand(scanParams));
@@ -41,7 +39,7 @@ exports.lambdaHandler = async () => {
       });
     });
 
-    // 3️⃣ Fetch stock prices and compare with thresholds
+    //  Fetch stock prices and compare with thresholds
     for (const stockSymbol of Object.keys(stockWatchlist)) {
       const url = `https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY&symbol=${stockSymbol}&interval=5min&apikey=${ALPHA_VANTAGE_API_KEY}`;
 
@@ -87,13 +85,13 @@ exports.lambdaHandler = async () => {
             const message = `Stock Alert for ${Username}!\n\nStock: ${stockSymbol}\nThreshold: ${Threshold}\nCurrent Price: ${stockPrice}\nTimestamp: ${latestTimestamp}\nCondition: ${condition}`;
 
             // Publish alert to the user's SNS topic
-            await sns
-              .publish({
-                Message: message,
-                Subject: `Stock Alert: ${stockSymbol} (${condition})`,
-                TopicArn: snsTopicArn, // Use the ARN fetched from DynamoDB
-              })
-              .promise();
+            const publishCommand = new PublishCommand({
+              Message: message,
+              Subject: `Stock Alert: ${stockSymbol} (${condition})`,
+              TopicArn: snsTopicArn,
+            });
+
+            await sns.send(publishCommand);
 
             console.log(`Sent alert for ${stockSymbol} - ${condition}`);
           }

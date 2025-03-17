@@ -1,15 +1,13 @@
 {
-  "name": "hello_world",
+  "name": "stock-alert",
   "version": "1.0.0",
-  "description": "hello world sample for NodeJS",
-  "main": "app.js",
-  "repository": "https://github.com/awslabs/aws-sam-cli/tree/develop/samcli/local/init/templates/cookiecutter-aws-sam-hello-nodejs",
+  "description": "A simple stock alert application",
   "author": "SAM CLI",
   "license": "MIT",
   "dependencies": {
     "@aws-sdk/client-sns": "^3.744.0",
     "aws-sdk": "^2.1692.0",
-    "axios": ">=1.6.0"
+    "axios": "^1.8.3"
   },
   "scripts": {
     "test": "mocha tests/unit/"
