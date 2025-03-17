@@ -65,10 +65,6 @@ exports.lambdaHandler = async (event) => {
       TopicArn: snsTopicArn,
     };
 
-    // const subscriptionsResponse = await sns
-    //   .listSubscriptionsByTopic(listSubscriptionsParams)
-    //   .promise();
-
     const subscriptionsResponse = await sns.send(
       new ListSubscriptionsByTopicCommand(listSubscriptionsParams)
     );
