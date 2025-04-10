@@ -3,8 +3,6 @@ const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const { ScanCommand, GetCommand } = require("@aws-sdk/lib-dynamodb");
 const axios = require("axios");
 
-console.log("Axios function");
-
 const dynamoDB = new DynamoDBClient({});
 const sns = new SNSClient({});
 
@@ -12,9 +10,7 @@ const ALPHA_VANTAGE_API_KEY = process.env.ALPHA_VANTAGE_API_KEY;
 
 exports.lambdaHandler = async () => {
   try {
-    console.log(
-      "🔹 Lambda triggered by EventBridge (CloudWatch Scheduled Event)"
-    );
+    console.log("Lambda triggered by EventBridge (CloudWatch Scheduled Event)");
 
     //  Fetch all stock thresholds from DynamoDB
     const scanParams = { TableName: "UserStockThresholds" };
